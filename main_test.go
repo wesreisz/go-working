@@ -6,22 +6,31 @@ import "net/http/httptest"
 import "strings"
 
 func TestHandler(t *testing.T) {
-	req, err := http.NewRequest(
-		http.MethodGet,
-		"http://localhost:8080/wes@golang.org",
-		nil,
-	)
-	if err != nil {
-		t.Fatal("Could not create request", err)
+	cases := []struct {
+		in, out string
+	}{
+		{"wes@golang.org", "gopher wes"},
+		{"something", "dear something"},
 	}
 
-	rec := httptest.NewRecorder()
-	handler(rec, req)
+	for _, c := range cases {
+		req, err := http.NewRequest(
+			http.MethodGet,
+			"http://localhost:8080/"+c.in,
+			nil,
+		)
+		if err != nil {
+			t.Fatal("Could not create request", err)
+		}
 
-	if rec.Code != http.StatusOK {
-		t.Errorf("Expected status 200; got %d", rec.Code)
-	}
-	if !strings.Contains(rec.Body.String(), "gopher wes") {
-		t.Errorf("unexpected body in response")
+		rec := httptest.NewRecorder()
+		handler(rec, req)
+
+		if rec.Code != http.StatusOK {
+			t.Errorf("Expected status 200; got %d", rec.Code)
+		}
+		if !strings.Contains(rec.Body.String(), c.out) {
+			t.Errorf("unexpected body in response")
+		}
 	}
 }
